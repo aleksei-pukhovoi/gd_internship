@@ -5,17 +5,6 @@ import java.util.Arrays;
 public final class MyString implements Comparable<MyString> {
     private final char[] value;
 
-    public static void main(String[] args) {
-        MyString string1 = new MyString(new char[]{'a', 'b', 'c'});
-        MyString string2 = new MyString(new char[]{'a', 'b', 'c'});
-        System.out.println(string1.equals(string2));
-        MyString string3 = string1.concat(string2);
-        System.out.println(string3);
-        System.out.println(string1.startsWith(new MyString(new char[]{'a'})));
-        System.out.println(string3.charAt(1));
-
-    }
-
     public MyString(char[] value) {
         this.value = Arrays.copyOf(value, value.length);
     }
