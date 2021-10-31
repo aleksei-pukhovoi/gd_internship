@@ -2,6 +2,8 @@ package string.my_string_implementation;
 
 import java.util.Arrays;
 
+// comments
+
 public final class MyString implements Comparable<MyString> {
     private final char[] value;
 
