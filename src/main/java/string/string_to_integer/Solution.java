@@ -1,5 +1,7 @@
 package string.string_to_integer;
 
+import static java.lang.Character.isDigit;
+
 class Solution {
 
 //    The algorithm for myAtoi(string s) is as follows:
@@ -18,30 +20,27 @@ class Solution {
 //Return the integer as the final result.
 
     public int myAtoi(String s) {
-        StringBuilder expression = new StringBuilder();
+        StringBuilder negExpression = new StringBuilder();
         StringBuilder digits = new StringBuilder();
-        char[] chars = getCharArray(s, expression);
+        char[] chars = getCharArray(s, negExpression);
         for (char ch : chars) {
-            if (ch >= 48 && ch <= 57) {
-                if (digits.length() == 0 && ch == 48) {
-                    continue;
-                }
+            if (isDigit(ch)) {
                 digits.append(ch);
-                if (digits.length() > 10) {
-                    break;
-                }
             } else break;
         }
         if (digits.length() == 0) {
             return 0;
         }
-        long result = Long.parseLong(expression.append(digits).toString());
+        long result = parseToNumber(digits);
+        if (negExpression.length() !=0) {
+            result *= -1;
+        }
         if (result < Integer.MIN_VALUE) return Integer.MIN_VALUE;
         if (result > Integer.MAX_VALUE) return Integer.MAX_VALUE;
         return (int) result;
     }
 
-    public char[] getCharArray(String s, StringBuilder sb) {
+    private char[] getCharArray(String s, StringBuilder sb) {
         int index = 0;
         String str = s.stripLeading();
         if (str.startsWith("-")) {
@@ -52,5 +51,14 @@ class Solution {
             index = 1;
         }
         return str.substring(index).toCharArray();
+    }
+
+    private long parseToNumber(StringBuilder sb) {
+        int len = sb.length();
+        long result = 0;
+        for (int i = 0; i < len; i++) {
+            result += Character.getNumericValue(sb.charAt(i)) * Math.pow(10, len - i - 1);
+        }
+        return result;
     }
 }
