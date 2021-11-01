@@ -10,7 +10,7 @@ public final class MyString implements Comparable<MyString> {
     }
 
     public MyString(MyString original) {
-        this.value = original.value;
+        this.value = Arrays.copyOf(original.value, original.value.length);
     }
 
     public MyString() {
@@ -77,6 +77,19 @@ public final class MyString implements Comparable<MyString> {
         return value[index];
     }
 
+    public MyString replace (char oldChar, char newChar) {
+        if(oldChar != newChar) {
+            MyString string = new MyString(this);
+            for (int i=0; i<string.length(); i++) {
+                if(string.value[i] == oldChar) {
+                    string.value[i] = newChar;
+                }
+            }
+            return string;
+        }
+        return this;
+    }
+
     public MyString substring(int start, int end) {
         checkIndex(start, end);
         int length = end - start;
@@ -121,13 +134,11 @@ public final class MyString implements Comparable<MyString> {
         int len1 = value.length;
         int len2 = anotherString.length();
         int min = Math.min(len1, len2);
-        char[] v1 = value;
-        char[] v2 = anotherString.value;
 
         int index = 0;
         while (index < min) {
-            char ch1 = v1[index];
-            char ch2 = v2[index];
+            char ch1 = value[index];
+            char ch2 = anotherString.value[index];
             if (ch1 != ch2) {
                 return ch1 - ch2;
             }
