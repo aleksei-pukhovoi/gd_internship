@@ -111,7 +111,10 @@ public class OrderStats {
                         Function.identity(),
                         Collectors.counting()))
                 .entrySet().stream()
-                .min(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+                .max((entry1,entry2)->
+                        Objects.equals(entry1.getValue(), entry2.getValue()) ?
+                                entry2.getKey().length() - entry1.getKey().length() :
+                                entry1.getValue().compareTo(entry2.getValue()))
                 .map(Map.Entry::getKey);
     }
 
@@ -136,22 +139,12 @@ public class OrderStats {
      */
     public static BigDecimal averageProductPriceForCreditCard(final Stream<Customer> customers, final String cardNumber) {
         final AveragingBigDecimalCollector collector = new AveragingBigDecimalCollector();
-        BigDecimal result = customers
+        return customers
                 .flatMap(customer -> customer.getOrders().stream())
-                .collect(Collectors.toMap(
-                        order -> order.getPaymentInfo().getCardNumber(),
-                        order -> order.getOrderItems().stream()
-                                .map(OrderStats::getPricesForOrderItem)
-                                .flatMap(Collection::stream)
-                                .collect(Collectors.toList()),
-                        (value1, value2) -> {
-                            value1.addAll(value2);
-                            return value1;
-                        })).entrySet().stream().collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        entry -> entry.getValue().stream().collect(collector)
-                )).get(cardNumber);
-        return result == null ? BigDecimal.ZERO : result;
+                .filter(order -> cardNumber.equals(order.getPaymentInfo().getCardNumber()))
+                .flatMap(order -> order.getOrderItems().stream())
+                .flatMap(item -> getPricesForOrderItem(item).stream())
+                .collect(collector);
     }
 
     private static List<BigDecimal> getPricesForOrderItem(OrderItem item) {
