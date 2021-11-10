@@ -143,15 +143,7 @@ public class OrderStats {
                 .flatMap(customer -> customer.getOrders().stream())
                 .filter(order -> cardNumber.equals(order.getPaymentInfo().getCardNumber()))
                 .flatMap(order -> order.getOrderItems().stream())
-                .flatMap(item -> getPricesForOrderItem(item).stream())
+                .flatMap(item-> Collections.nCopies(item.getQuantity(), item.getProduct().getPrice()).stream())
                 .collect(collector);
-    }
-
-    private static List<BigDecimal> getPricesForOrderItem(OrderItem item) {
-        List<BigDecimal> prices = new ArrayList<>();
-        for (int i = 0; i < item.getQuantity(); i++) {
-            prices.add(item.getProduct().getPrice());
-        }
-        return prices;
     }
 }
