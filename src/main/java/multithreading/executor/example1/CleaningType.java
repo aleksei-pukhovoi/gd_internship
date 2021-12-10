@@ -1,4 +1,4 @@
-package multithreading.executor;
+package multithreading.executor.example1;
 
 public enum CleaningType {
     DUST{

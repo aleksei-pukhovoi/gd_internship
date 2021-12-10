@@ -1,4 +1,4 @@
-package multithreading.executor;
+package multithreading.executor.example1;
 
 import java.time.Duration;
 import java.time.LocalTime;
