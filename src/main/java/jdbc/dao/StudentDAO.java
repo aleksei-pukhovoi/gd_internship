@@ -80,6 +80,9 @@ public class StudentDAO extends BaseDAO<Integer, Student> {
 
     @Override
     public Student create(Student entity) {
+        if (entity == null) {
+            throw new RuntimeException("Student can't be null");
+        }
         Student student = null;
         try (PreparedStatement statement = this.connection.prepareStatement(CREATE, Statement.RETURN_GENERATED_KEYS)) {
             fillPreparedStatement(entity, statement);

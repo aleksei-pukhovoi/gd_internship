@@ -3,11 +3,12 @@ package jdbc;
 import jdbc.dao.*;
 import jdbc.entity.*;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
+import java.sql.*;
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
@@ -25,7 +26,17 @@ public class JdbcExecutor {
             StudentDAO studentDAO = new StudentDAO(connection, skillDAO, mentorDAO, projectDAO);
             InfoDAO infoDAO = new InfoDAO(connection, studentDAO);
 
-            //read
+//            String sql = String.format("update info set info_from = '%s', tasks_done = %d where info_id = 62",newRes, tasks);
+//            String sql = String.format("update info set info_from = '%s', tasks_done = %d where info_id = 62", Timestamp.from(instant), tasks);
+//            String sql = String.format(
+//            ("update info set info_student = %d, info_from = '%s', tasks_done = %d WHERE info_id = %d"),
+//                        20, Timestamp.from(instant), 100, 62);
+//            Statement statement = connection.createStatement();
+//            System.out.println(sql);
+//            statement.addBatch(sql);
+//            int[] ints = statement.executeBatch();
+//            System.out.println(Arrays.toString(ints));
+
             System.out.print("Read one row: ");
             Info byId = infoDAO.findById(10);
             System.out.println(byId);
@@ -53,6 +64,11 @@ public class JdbcExecutor {
             infoDB.setTasksDone(10);
             Info infoUpdate = infoDAO.update(infoDB);
             System.out.println(infoUpdate);
+
+            studentUpdate.setFirstName("Igor");
+            infoDB.setTasksDone(8);
+            Info infoUpdateBatch = infoDAO.updateBatch(infoDB);
+            System.out.println(infoUpdateBatch);
             System.out.println("+++++++++++++++++++++++");
 
             //delete
@@ -106,6 +122,7 @@ public class JdbcExecutor {
         info.setTasksDone(5);
         return info;
     }
+
     private Skill createSkill(String name, String type) {
         Skill skill = new Skill();
         skill.setName(name);

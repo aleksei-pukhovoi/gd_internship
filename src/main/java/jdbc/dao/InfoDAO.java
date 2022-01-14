@@ -66,6 +66,9 @@ public class InfoDAO extends BaseDAO<Integer, Info> {
 
     @Override
     public Info create(Info entity) {
+        if (entity == null) {
+            throw new RuntimeException("Info can't be null");
+        }
         Info info = null;
         try (PreparedStatement statement = this.connection.prepareStatement(CREATE, Statement.RETURN_GENERATED_KEYS)) {
             fillPreparedStatement(entity, statement);
@@ -98,6 +101,51 @@ public class InfoDAO extends BaseDAO<Integer, Info> {
             fillPreparedStatement(entity, statement);
             statement.setInt(4, entity.getId());
             statement.executeUpdate();
+            info = this.findById(entity.getId());
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return info;
+    }
+
+    public Info updateBatch(Info entity) {
+        Student student = entity.getStudent();
+        Mentor mentor = student.getMentor();
+        Skill mentorSkill = mentor.getSkill();
+        String updateMentorSkill= String.format(
+                "UPDATE skills SET skill_name = '%s', skill_type = '%s' WHERE skill_id = %d",
+                mentorSkill.getName(), mentorSkill.getType(), mentorSkill.getId());
+        Skill studentSkill = student.getSkill();
+        String updateStudentSkill= String.format(
+                "UPDATE skills SET skill_name = '%s', skill_type = '%s' WHERE skill_id = %d",
+                studentSkill.getName(), studentSkill.getType(), studentSkill.getId());
+        Project project = student.getProject();
+        String updateProject= String.format(
+                "UPDATE projects SET project_name = '%s' WHERE project_id = %d",
+                project.getName(), project.getId());
+        String updateMentor= String.format(
+                "UPDATE mentors SET mentor_firstname = '%s', mentor_lastname = '%s', mentor_age = %d, mentor_skill = %d WHERE mentor_id = %d",
+                mentor.getFirstName(), mentor.getLastName(), mentor.getAge(), mentorSkill.getId(), mentor.getId());
+        String updateStudent= String.format(
+                ("UPDATE students SET student_firstname = '%s', student_lastname = '%s', student_age = %d, student_skill = %d, "
+                        + "student_mentor = %d, student_project = %d WHERE student_id = %d"),
+                student.getFirstName(), student.getLastName(), student.getAge(), studentSkill.getId(),
+                mentor.getId(), project.getId(), student.getId());
+        String updateInfo= String.format(
+                ("UPDATE info SET info_student = %d, info_from = '%s', tasks_done = %d WHERE info_id = %d"),
+                student.getId(), Timestamp.from(entity.getStartTime()), entity.getTasksDone(), entity.getId());
+        Info info;
+        try (Statement statement = this.connection.createStatement()) {
+            if (mentorSkill.getId() == 0 && studentSkill.getId() == 0 && project.getId() == 0 && mentor.getId() == 0
+                    && student.getId() == 0 && entity.getId() == 0) {
+                throw new RuntimeException("Update error");
+            }
+            statement.addBatch(updateMentorSkill);
+            statement.addBatch(updateStudentSkill);
+            statement.addBatch(updateProject);
+            statement.addBatch(updateMentor);
+            statement.addBatch(updateStudent);
+            statement.addBatch(updateInfo);
             info = this.findById(entity.getId());
         } catch (SQLException e) {
             throw new RuntimeException(e);
