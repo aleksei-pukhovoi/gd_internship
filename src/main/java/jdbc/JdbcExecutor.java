@@ -5,10 +5,7 @@ import jdbc.entity.*;
 
 import java.sql.*;
 import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
@@ -25,17 +22,6 @@ public class JdbcExecutor {
             MentorDAO mentorDAO = new MentorDAO(connection, skillDAO);
             StudentDAO studentDAO = new StudentDAO(connection, skillDAO, mentorDAO, projectDAO);
             InfoDAO infoDAO = new InfoDAO(connection, studentDAO);
-
-//            String sql = String.format("update info set info_from = '%s', tasks_done = %d where info_id = 62",newRes, tasks);
-//            String sql = String.format("update info set info_from = '%s', tasks_done = %d where info_id = 62", Timestamp.from(instant), tasks);
-//            String sql = String.format(
-//            ("update info set info_student = %d, info_from = '%s', tasks_done = %d WHERE info_id = %d"),
-//                        20, Timestamp.from(instant), 100, 62);
-//            Statement statement = connection.createStatement();
-//            System.out.println(sql);
-//            statement.addBatch(sql);
-//            int[] ints = statement.executeBatch();
-//            System.out.println(Arrays.toString(ints));
 
             System.out.print("Read one row: ");
             Info byId = infoDAO.findById(10);
@@ -61,11 +47,18 @@ public class JdbcExecutor {
             System.out.println("Update last row: ");
             Student studentUpdate = infoDB.getStudent();
             studentUpdate.setFirstName("Petr");
-            infoDB.setTasksDone(10);
+            Mentor mentorUpdate = studentUpdate.getMentor();
+            mentorUpdate.setFirstName("Vasiliy");
+            Project projectUpdate = studentUpdate.getProject();
+            projectUpdate.setName("Genom");
+            infoDB.setTasksDone(6);
+            infoDB.setStartTime(Instant.now());
             Info infoUpdate = infoDAO.update(infoDB);
             System.out.println(infoUpdate);
 
+            System.out.println("Update last row with batch: ");
             studentUpdate.setFirstName("Igor");
+            infoDB.setStartTime(Instant.now().minus(30, ChronoUnit.DAYS));
             infoDB.setTasksDone(8);
             Info infoUpdateBatch = infoDAO.updateBatch(infoDB);
             System.out.println(infoUpdateBatch);

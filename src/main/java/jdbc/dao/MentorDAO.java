@@ -101,6 +101,7 @@ public class MentorDAO extends BaseDAO<Integer, Mentor> {
     public Mentor update(Mentor entity) {
         Mentor mentor;
         try (PreparedStatement statement = this.connection.prepareStatement(UPDATE)) {
+            skillDAO.update(entity.getSkill());
             fillPreparedStatement(entity, statement);
             statement.setInt(5, entity.getId());
             statement.executeUpdate();

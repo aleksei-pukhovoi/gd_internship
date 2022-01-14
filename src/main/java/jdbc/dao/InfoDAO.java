@@ -98,6 +98,7 @@ public class InfoDAO extends BaseDAO<Integer, Info> {
     public Info update(Info entity) {
         Info info;
         try (PreparedStatement statement = this.connection.prepareStatement(UPDATE)) {
+            studentDAO.update(entity.getStudent());
             fillPreparedStatement(entity, statement);
             statement.setInt(4, entity.getId());
             statement.executeUpdate();
@@ -146,6 +147,7 @@ public class InfoDAO extends BaseDAO<Integer, Info> {
             statement.addBatch(updateMentor);
             statement.addBatch(updateStudent);
             statement.addBatch(updateInfo);
+            statement.executeBatch();
             info = this.findById(entity.getId());
         } catch (SQLException e) {
             throw new RuntimeException(e);

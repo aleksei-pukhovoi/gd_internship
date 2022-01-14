@@ -112,6 +112,9 @@ public class StudentDAO extends BaseDAO<Integer, Student> {
     public Student update(Student entity) {
         Student student;
         try (PreparedStatement statement = this.connection.prepareStatement(UPDATE)) {
+            skillDAO.update(entity.getSkill());
+            mentorDAO.update(entity.getMentor());
+            projectDAO.update(entity.getProject());
             fillPreparedStatement(entity, statement);
             statement.setInt(7, entity.getId());
             statement.executeUpdate();
