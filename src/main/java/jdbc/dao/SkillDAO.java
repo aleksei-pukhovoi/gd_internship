@@ -101,7 +101,7 @@ public class SkillDAO extends BaseDAO<Integer, Skill> {
         return skill;
     }
 
-    private void fillPreparedStatement(Skill entity, PreparedStatement statement) throws SQLException {
+    public void fillPreparedStatement(Skill entity, PreparedStatement statement) throws SQLException {
         statement.setString(1, entity.getName());
         statement.setString(2, entity.getType());
     }

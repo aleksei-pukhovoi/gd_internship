@@ -15,16 +15,34 @@ public class InfoDAO extends BaseDAO<Integer, Info> {
     private static final String CREATE =
             "INSERT INTO info(info_student, info_from, tasks_done) VALUES(?, ?, ?)";
 
-    private static final String UPDATE =
+    private static final String UPDATE_INFO =
             "UPDATE info SET info_student = ?, info_from = ?, tasks_done = ? WHERE info_id = ?";
+
+    private static final String UPDATE_SKILL =
+            "UPDATE skills SET skill_name = ?, skill_type = ? WHERE skill_id = ?";
+
+    private static final String UPDATE_PROJECT = "UPDATE projects SET project_name = ? WHERE project_id = ?";
+
+    private static final String UPDATE_MENTOR =
+            "UPDATE mentors SET mentor_firstname = ?, mentor_lastname = ?, mentor_age = ?, mentor_skill = ? WHERE mentor_id = ?";
+
+    private static final String UPDATE_STUDENT =
+            "UPDATE students SET student_firstname = ?, student_lastname = ?, student_age = ?, student_skill = ?, "
+                    + "student_mentor = ?, student_project = ? WHERE student_id = ?";
 
     private static final String DELETE_BY_ID = "DELETE FROM info WHERE info_id = ?";
 
     private final StudentDAO studentDAO;
+    private final MentorDAO mentorDAO;
+    private final SkillDAO skillDAO;
+    private final ProjectDAO projectDAO;
 
-    public InfoDAO(Connection connection, StudentDAO studentDAO) {
+    public InfoDAO(Connection connection, StudentDAO studentDAO, MentorDAO mentorDAO, SkillDAO skillDAO, ProjectDAO projectDAO) {
         super(connection);
         this.studentDAO = studentDAO;
+        this.mentorDAO = mentorDAO;
+        this.skillDAO = skillDAO;
+        this.projectDAO = projectDAO;
     }
 
     @Override
@@ -71,6 +89,7 @@ public class InfoDAO extends BaseDAO<Integer, Info> {
         }
         Info info = null;
         try (PreparedStatement statement = this.connection.prepareStatement(CREATE, Statement.RETURN_GENERATED_KEYS)) {
+            statement.setInt(1, getStudentId(entity));
             fillPreparedStatement(entity, statement);
             statement.executeUpdate();
             ResultSet resultSet = statement.getGeneratedKeys();
@@ -97,8 +116,9 @@ public class InfoDAO extends BaseDAO<Integer, Info> {
     @Override
     public Info update(Info entity) {
         Info info;
-        try (PreparedStatement statement = this.connection.prepareStatement(UPDATE)) {
+        try (PreparedStatement statement = this.connection.prepareStatement(UPDATE_INFO)) {
             studentDAO.update(entity.getStudent());
+            statement.setInt(1, getStudentId(entity));
             fillPreparedStatement(entity, statement);
             statement.setInt(4, entity.getId());
             statement.executeUpdate();
@@ -113,41 +133,46 @@ public class InfoDAO extends BaseDAO<Integer, Info> {
         Student student = entity.getStudent();
         Mentor mentor = student.getMentor();
         Skill mentorSkill = mentor.getSkill();
-        String updateMentorSkill= String.format(
-                "UPDATE skills SET skill_name = '%s', skill_type = '%s' WHERE skill_id = %d",
-                mentorSkill.getName(), mentorSkill.getType(), mentorSkill.getId());
         Skill studentSkill = student.getSkill();
-        String updateStudentSkill= String.format(
-                "UPDATE skills SET skill_name = '%s', skill_type = '%s' WHERE skill_id = %d",
-                studentSkill.getName(), studentSkill.getType(), studentSkill.getId());
         Project project = student.getProject();
-        String updateProject= String.format(
-                "UPDATE projects SET project_name = '%s' WHERE project_id = %d",
-                project.getName(), project.getId());
-        String updateMentor= String.format(
-                "UPDATE mentors SET mentor_firstname = '%s', mentor_lastname = '%s', mentor_age = %d, mentor_skill = %d WHERE mentor_id = %d",
-                mentor.getFirstName(), mentor.getLastName(), mentor.getAge(), mentorSkill.getId(), mentor.getId());
-        String updateStudent= String.format(
-                ("UPDATE students SET student_firstname = '%s', student_lastname = '%s', student_age = %d, student_skill = %d, "
-                        + "student_mentor = %d, student_project = %d WHERE student_id = %d"),
-                student.getFirstName(), student.getLastName(), student.getAge(), studentSkill.getId(),
-                mentor.getId(), project.getId(), student.getId());
-        String updateInfo= String.format(
-                ("UPDATE info SET info_student = %d, info_from = '%s', tasks_done = %d WHERE info_id = %d"),
-                student.getId(), Timestamp.from(entity.getStartTime()), entity.getTasksDone(), entity.getId());
         Info info;
-        try (Statement statement = this.connection.createStatement()) {
+        try (PreparedStatement psSkill = this.connection.prepareStatement(UPDATE_SKILL);
+             PreparedStatement psProject = this.connection.prepareStatement(UPDATE_PROJECT);
+             PreparedStatement psMentor = this.connection.prepareStatement(UPDATE_MENTOR);
+             PreparedStatement psStudent = this.connection.prepareStatement(UPDATE_STUDENT);
+             PreparedStatement psInfo = this.connection.prepareStatement(UPDATE_INFO)) {
             if (mentorSkill.getId() == 0 && studentSkill.getId() == 0 && project.getId() == 0 && mentor.getId() == 0
                     && student.getId() == 0 && entity.getId() == 0) {
                 throw new RuntimeException("Update error");
             }
-            statement.addBatch(updateMentorSkill);
-            statement.addBatch(updateStudentSkill);
-            statement.addBatch(updateProject);
-            statement.addBatch(updateMentor);
-            statement.addBatch(updateStudent);
-            statement.addBatch(updateInfo);
-            statement.executeBatch();
+            skillDAO.fillPreparedStatement(mentorSkill, psSkill);
+            psSkill.setInt(3, mentorSkill.getId());
+            psSkill.addBatch();
+            skillDAO.fillPreparedStatement(studentSkill, psSkill);
+            psSkill.setInt(3, studentSkill.getId());
+            psSkill.addBatch();
+            psSkill.executeBatch();
+            projectDAO.fillPreparedStatement(project, psProject);
+            psProject.setInt(2, project.getId());
+            psSkill.addBatch();
+            psSkill.executeBatch();
+            mentorDAO.fillPreparedStatement(mentor, psMentor);
+            psMentor.setInt(4, mentorSkill.getId());
+            psMentor.setInt(5, mentor.getId());
+            psMentor.addBatch();
+            psMentor.executeBatch();
+            studentDAO.fillPreparedStatement(student, psStudent);
+            psStudent.setInt(4, studentSkill.getId());
+            psStudent.setInt(5, mentor.getId());
+            psStudent.setInt(6, project.getId());
+            psStudent.setInt(7, student.getId());
+            psStudent.addBatch();
+            psStudent.executeBatch();
+            psInfo.setInt(1, student.getId());
+            fillPreparedStatement(entity, psInfo);
+            psInfo.setInt(4, entity.getId());
+            psInfo.addBatch();
+            psInfo.executeBatch();
             info = this.findById(entity.getId());
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -156,7 +181,6 @@ public class InfoDAO extends BaseDAO<Integer, Info> {
     }
 
     private void fillPreparedStatement(Info entity, PreparedStatement statement) throws SQLException {
-        statement.setInt(1, getStudentId(entity));
         statement.setTimestamp(2, Timestamp.from(entity.getStartTime()));
         statement.setInt(3, entity.getTasksDone());
     }

@@ -1,6 +1,7 @@
 package jdbc.dao;
 
 import jdbc.entity.Project;
+import jdbc.entity.Skill;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -61,7 +62,7 @@ public class ProjectDAO extends BaseDAO<Integer, Project> {
         }
         Project project = null;
         try (PreparedStatement statement = this.connection.prepareStatement(CREATE, Statement.RETURN_GENERATED_KEYS)) {
-            statement.setString(1, entity.getName());
+            fillPreparedStatement(entity, statement);
             statement.executeUpdate();
             ResultSet resultSet = statement.getGeneratedKeys();
             if (resultSet.next()) {
@@ -88,7 +89,7 @@ public class ProjectDAO extends BaseDAO<Integer, Project> {
     public Project update(Project entity) {
         Project project;
         try (PreparedStatement statement = this.connection.prepareStatement(UPDATE)) {
-            statement.setString(1, entity.getName());
+            fillPreparedStatement(entity, statement);
             statement.setInt(2, entity.getId());
             statement.executeUpdate();
             project = this.findById(entity.getId());
@@ -96,5 +97,9 @@ public class ProjectDAO extends BaseDAO<Integer, Project> {
             throw new RuntimeException(e);
         }
         return project;
+    }
+
+    public void fillPreparedStatement(Project entity, PreparedStatement statement) throws SQLException {
+        statement.setString(1, entity.getName());
     }
 }

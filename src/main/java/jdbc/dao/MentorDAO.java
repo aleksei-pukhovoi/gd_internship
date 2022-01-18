@@ -75,6 +75,7 @@ public class MentorDAO extends BaseDAO<Integer, Mentor> {
         Mentor mentor = null;
         try (PreparedStatement statement = this.connection.prepareStatement(CREATE, Statement.RETURN_GENERATED_KEYS)) {
             fillPreparedStatement(entity, statement);
+            statement.setInt(4, getSkillId(entity));
             statement.executeUpdate();
             ResultSet resultSet = statement.getGeneratedKeys();
             if (resultSet.next()) {
@@ -103,6 +104,7 @@ public class MentorDAO extends BaseDAO<Integer, Mentor> {
         try (PreparedStatement statement = this.connection.prepareStatement(UPDATE)) {
             skillDAO.update(entity.getSkill());
             fillPreparedStatement(entity, statement);
+            statement.setInt(4, getSkillId(entity));
             statement.setInt(5, entity.getId());
             statement.executeUpdate();
             mentor = this.findById(entity.getId());
@@ -112,11 +114,10 @@ public class MentorDAO extends BaseDAO<Integer, Mentor> {
         return mentor;
     }
 
-    private void fillPreparedStatement(Mentor entity, PreparedStatement statement) throws SQLException {
+    public void fillPreparedStatement(Mentor entity, PreparedStatement statement) throws SQLException {
         statement.setString(1, entity.getFirstName());
         statement.setString(2, entity.getLastName());
         statement.setInt(3, entity.getAge());
-        statement.setInt(4, getSkillId(entity));
     }
 
     private int getSkillId(Mentor entity) {

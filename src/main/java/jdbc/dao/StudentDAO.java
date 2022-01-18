@@ -86,6 +86,9 @@ public class StudentDAO extends BaseDAO<Integer, Student> {
         Student student = null;
         try (PreparedStatement statement = this.connection.prepareStatement(CREATE, Statement.RETURN_GENERATED_KEYS)) {
             fillPreparedStatement(entity, statement);
+            statement.setInt(4, getSkillId(entity));
+            statement.setInt(5, getMentorId(entity));
+            statement.setInt(6, getProjectId(entity));
             statement.executeUpdate();
             ResultSet resultSet = statement.getGeneratedKeys();
             if (resultSet.next()) {
@@ -116,6 +119,9 @@ public class StudentDAO extends BaseDAO<Integer, Student> {
             mentorDAO.update(entity.getMentor());
             projectDAO.update(entity.getProject());
             fillPreparedStatement(entity, statement);
+            statement.setInt(4, getSkillId(entity));
+            statement.setInt(5, getMentorId(entity));
+            statement.setInt(6, getProjectId(entity));
             statement.setInt(7, entity.getId());
             statement.executeUpdate();
             student = this.findById(entity.getId());
@@ -125,13 +131,10 @@ public class StudentDAO extends BaseDAO<Integer, Student> {
         return student;
     }
 
-    private void fillPreparedStatement(Student entity, PreparedStatement statement) throws SQLException {
+   public void fillPreparedStatement(Student entity, PreparedStatement statement) throws SQLException {
         statement.setString(1, entity.getFirstName());
         statement.setString(2, entity.getLastName());
         statement.setInt(3, entity.getAge());
-        statement.setInt(4, getSkillId(entity));
-        statement.setInt(5, getMentorId(entity));
-        statement.setInt(6, getProjectId(entity));
     }
 
     private int getMentorId(Student entity) {

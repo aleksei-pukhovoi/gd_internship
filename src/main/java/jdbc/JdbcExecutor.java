@@ -21,7 +21,7 @@ public class JdbcExecutor {
             ProjectDAO projectDAO = new ProjectDAO(connection);
             MentorDAO mentorDAO = new MentorDAO(connection, skillDAO);
             StudentDAO studentDAO = new StudentDAO(connection, skillDAO, mentorDAO, projectDAO);
-            InfoDAO infoDAO = new InfoDAO(connection, studentDAO);
+            InfoDAO infoDAO = new InfoDAO(connection, studentDAO, mentorDAO, skillDAO, projectDAO);
 
             System.out.print("Read one row: ");
             Info byId = infoDAO.findById(10);
